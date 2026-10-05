@@ -64,9 +64,9 @@ export function getDefault16x9Corners(width: number, height: number): QuadCorner
 
 /**
  * Automatically detect the 4 corners of the storyboard drawing box.
- * Uses OpenCV.js if available, otherwise intelligently detects high-contrast boundary or returns default 16:9.
+ * Returns null if no high-confidence 16:9 rectangular frame was found.
  */
-export async function detectStoryboardFrame(imageElement: HTMLImageElement | HTMLVideoElement): Promise<QuadCorners> {
+export async function detectStoryboardFrame(imageElement: HTMLImageElement | HTMLVideoElement): Promise<QuadCorners | null> {
   const width = 'videoWidth' in imageElement ? imageElement.videoWidth : imageElement.naturalWidth || imageElement.width;
   const height = 'videoHeight' in imageElement ? imageElement.videoHeight : imageElement.naturalHeight || imageElement.height;
 
@@ -99,15 +99,17 @@ export async function detectStoryboardFrame(imageElement: HTMLImageElement | HTM
 
         let maxArea = 0;
         let bestQuad: Point[] | null = null;
-        const minArea = (width * height) * 0.10; // At least 10% of frame
+        const totalArea = width * height;
+        const minArea = totalArea * 0.10; // Aspoň 10% plochy
+        const maxAreaAllowed = totalArea * 0.88; // Nesmí to být celý list papíru A4 ani celý stůl
 
         for (let i = 0; i < contours.size(); ++i) {
           const contour = contours.get(i);
           const area = cv.contourArea(contour);
-          if (area > minArea && area > maxArea) {
+          if (area > minArea && area < maxAreaAllowed) {
             const peri = cv.arcLength(contour, true);
             const approx = new cv.Mat();
-            cv.approxPolyDP(contour, approx, 0.02 * peri, true);
+            cv.approxPolyDP(contour, approx, 0.025 * peri, true);
 
             if (approx.rows === 4 && cv.isContourConvex(approx)) {
               const pts: Point[] = [];
@@ -117,8 +119,26 @@ export async function detectStoryboardFrame(imageElement: HTMLImageElement | HTM
                   y: approx.data32S[j * 2 + 1]
                 });
               }
-              maxArea = area;
-              bestQuad = pts;
+
+              const ordered = orderCorners(pts);
+              const topW = Math.hypot(ordered.topRight.x - ordered.topLeft.x, ordered.topRight.y - ordered.topLeft.y);
+              const botW = Math.hypot(ordered.bottomRight.x - ordered.bottomLeft.x, ordered.bottomRight.y - ordered.bottomLeft.y);
+              const leftH = Math.hypot(ordered.bottomLeft.x - ordered.topLeft.x, ordered.bottomLeft.y - ordered.topLeft.y);
+              const rightH = Math.hypot(ordered.bottomRight.x - ordered.topRight.x, ordered.bottomRight.y - ordered.topRight.y);
+
+              const avgW = (topW + botW) / 2;
+              const avgH = (leftH + rightH) / 2;
+              const aspectRatio = avgW / Math.max(1, avgH);
+
+              // KLÍČOVÁ PODMÍNKA: Storyboard rámeček MUSÍ být na šířku 16:9 (poměr 1.45 až 2.05).
+              // Pokud je poměr < 1.40, jde o celý list papíru A4 na výšku nebo stůl -> IGNOROVAT!
+              const isLandscape16x9 = aspectRatio >= 1.45 && aspectRatio <= 2.05;
+              const isReasonablySymmetric = Math.abs(topW - botW) / avgW < 0.25 && Math.abs(leftH - rightH) / avgH < 0.25;
+
+              if (isLandscape16x9 && isReasonablySymmetric && area > maxArea) {
+                maxArea = area;
+                bestQuad = pts;
+              }
             }
             approx.delete();
           }
@@ -143,8 +163,8 @@ export async function detectStoryboardFrame(imageElement: HTMLImageElement | HTM
     }
   }
 
-  // Fallback to centered 16:9 framing
-  return getDefault16x9Corners(width, height);
+  // Pokud nebyl nalezen spolehlivý obrys, vrátit null
+  return null;
 }
 
 /**
@@ -243,7 +263,29 @@ export function warpPerspectiveCanvas(
   outputWidth = 1280,
   outputHeight = 720
 ): HTMLCanvasElement {
-  // If OpenCV.js is ready, use its optimized C++ WebAssembly warpPerspective
+  // 1. Pokud jde o rovný obdélník 16:9, použít přímý ořez bez jakéhokoliv zkreslení
+  const isRectangular = 
+    Math.abs(corners.topLeft.y - corners.topRight.y) < 5 &&
+    Math.abs(corners.bottomLeft.y - corners.bottomRight.y) < 5 &&
+    Math.abs(corners.topLeft.x - corners.bottomLeft.x) < 5 &&
+    Math.abs(corners.topRight.x - corners.bottomRight.x) < 5;
+
+  if (isRectangular) {
+    const outCanvas = document.createElement('canvas');
+    outCanvas.width = outputWidth;
+    outCanvas.height = outputHeight;
+    const ctx = outCanvas.getContext('2d')!;
+    const sx = Math.max(0, corners.topLeft.x);
+    const sy = Math.max(0, corners.topLeft.y);
+    const sw = Math.max(1, corners.topRight.x - corners.topLeft.x);
+    const sh = Math.max(1, corners.bottomLeft.y - corners.topLeft.y);
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+    ctx.drawImage(sourceCanvasOrImage, sx, sy, sw, sh, 0, 0, outputWidth, outputHeight);
+    return outCanvas;
+  }
+
+  // 2. Pokud jsou rohy posunuté pod úhlem, provést perspektivní narovnání
   if (typeof window !== 'undefined' && window.cv && window.cv.Mat) {
     try {
       const cv = window.cv;

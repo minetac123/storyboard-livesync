@@ -7,7 +7,8 @@ import {
   RotateCcw, 
   Upload, 
   ChevronRight,
-  Maximize2
+  Maximize2,
+  Zap
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { Point, QuadCorners, FilterSettings } from '../types/storyboard';
@@ -152,29 +153,61 @@ export const ScannerEngine: React.FC<ScannerEngineProps> = ({
   const loadCapturedData = (dataUrl: string) => {
     stopCamera();
     const img = new Image();
-    img.onload = async () => {
+    img.onload = () => {
       setCapturedImage(img);
       setImageDimensions({ width: img.width, height: img.height });
-      const detected = await detectStoryboardFrame(img);
-      setCorners(detected);
+      // Výchozí je VŽDY čistý, rovný obdélník 16:9 uprostřed obrazu (žádná deformace)
+      const defaultCorners = getDefault16x9Corners(img.width, img.height);
+      setCorners(defaultCorners);
       setStep('crop');
     };
     img.src = dataUrl;
+  };
+
+  // 1. Nastavení čistého 16:9 rámečku na střed
+  const handleSetCenter16x9 = () => {
+    if (imageDimensions.width > 0) {
+      setCorners(getDefault16x9Corners(imageDimensions.width, imageDimensions.height));
+    }
+  };
+
+  // 2. Nastavení rámečku na celý snímek v poměru 16:9
+  const handleSetFullImage16x9 = () => {
+    if (imageDimensions.width > 0) {
+      const w = imageDimensions.width;
+      const h = imageDimensions.height;
+      let targetW = w;
+      let targetH = targetW * (9 / 16);
+      if (targetH > h) {
+        targetH = h;
+        targetW = targetH * (16 / 9);
+      }
+      const cx = w / 2;
+      const cy = h / 2;
+      setCorners({
+        topLeft: { x: Math.round(cx - targetW / 2), y: Math.round(cy - targetH / 2) },
+        topRight: { x: Math.round(cx + targetW / 2), y: Math.round(cy - targetH / 2) },
+        bottomRight: { x: Math.round(cx + targetW / 2), y: Math.round(cy + targetH / 2) },
+        bottomLeft: { x: Math.round(cx - targetW / 2), y: Math.round(cy + targetH / 2) },
+      });
+    }
   };
 
   // Automatické vyhledání rohů
   const handleAutoDetect = async () => {
     if (capturedImage) {
       const detected = await detectStoryboardFrame(capturedImage);
-      setCorners(detected);
+      if (detected) {
+        setCorners(detected);
+      } else {
+        handleSetCenter16x9();
+      }
     }
   };
 
   // Reset rohů do středu 16:9
   const handleResetCorners = () => {
-    if (imageDimensions.width > 0) {
-      setCorners(getDefault16x9Corners(imageDimensions.width, imageDimensions.height));
-    }
+    handleSetCenter16x9();
   };
 
   // Posun rohu prstem / myší
@@ -190,6 +223,9 @@ export const ScannerEngine: React.FC<ScannerEngineProps> = ({
     const scaleY = imageDimensions.height / rect.height;
 
     const onMove = (moveEvent: MouseEvent | TouchEvent) => {
+      if ('cancelable' in moveEvent && moveEvent.cancelable) {
+        moveEvent.preventDefault();
+      }
       let clientX = 0;
       let clientY = 0;
 
@@ -219,19 +255,24 @@ export const ScannerEngine: React.FC<ScannerEngineProps> = ({
       window.removeEventListener('mouseup', onEnd);
       window.removeEventListener('touchmove', onMove);
       window.removeEventListener('touchend', onEnd);
+      window.removeEventListener('touchcancel', onEnd);
     };
 
     window.addEventListener('mousemove', onMove);
     window.addEventListener('mouseup', onEnd);
-    window.addEventListener('touchmove', onMove);
+    window.addEventListener('touchmove', onMove, { passive: false });
     window.addEventListener('touchend', onEnd);
+    window.addEventListener('touchcancel', onEnd);
   };
 
   // Ořez a perspektivní narovnání
-  const handlePerformWarp = () => {
-    if (!capturedImage || !corners) return;
+  const handlePerformWarp = (customCorners?: QuadCorners) => {
+    if (!capturedImage) return;
+    const targetCorners = customCorners || corners;
+    if (!targetCorners) return;
+
     try {
-      const warped = warpPerspectiveCanvas(capturedImage, corners, 1280, 720);
+      const warped = warpPerspectiveCanvas(capturedImage, targetCorners, 1280, 720);
       setWarpedCanvas(warped);
 
       const copy = document.createElement('canvas');
@@ -250,6 +291,14 @@ export const ScannerEngine: React.FC<ScannerEngineProps> = ({
       setStep('filter');
     } catch (err) {
       console.error('Chyba ořezu:', err);
+    }
+  };
+
+  // Okamžité použití snímku bez ručního posouvání rohů
+  const handleSkipCrop = () => {
+    if (imageDimensions.width > 0) {
+      const defaultCorners = getDefault16x9Corners(imageDimensions.width, imageDimensions.height);
+      handlePerformWarp(defaultCorners);
     }
   };
 
@@ -438,23 +487,33 @@ export const ScannerEngine: React.FC<ScannerEngineProps> = ({
       {/* --- KROK 2: Ořez a narovnání --- */}
       {step === 'crop' && capturedImage && corners && (
         <div className="flex-1 flex flex-col justify-between relative bg-black">
-          <div className="bg-black/90 px-4 py-3 flex items-center justify-between border-b border-zinc-800 text-xs">
-            <span className="font-semibold text-white">
-              📐 Upravte 4 rohy kresby
+          {/* Horní lišta s předvolbami ořezu */}
+          <div className="bg-black/95 px-3 py-2.5 flex items-center justify-between border-b border-zinc-800 text-xs gap-2">
+            <span className="font-semibold text-white truncate">
+              📐 Ořez kresby
             </span>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5 shrink-0">
+              <button
+                onClick={handleSetCenter16x9}
+                className="px-2.5 py-1 rounded-lg bg-zinc-900 border border-zinc-700 text-zinc-300 text-[11px] font-medium hover:text-white active:scale-95 transition-all"
+                title="Výchozí 16:9 rámeček na střed"
+              >
+                16:9 Střed
+              </button>
+              <button
+                onClick={handleSetFullImage16x9}
+                className="px-2.5 py-1 rounded-lg bg-zinc-900 border border-zinc-700 text-zinc-300 text-[11px] font-medium hover:text-white active:scale-95 transition-all"
+                title="Maximální 16:9 rámeček z celého snímku"
+              >
+                Celý snímek
+              </button>
               <button
                 onClick={handleAutoDetect}
-                className="px-2.5 py-1 rounded-lg bg-zinc-900 border border-zinc-700 text-zinc-300 flex items-center gap-1 text-[11px] hover:text-white"
+                className="px-2.5 py-1 rounded-lg bg-zinc-900 border border-zinc-700 text-white text-[11px] font-medium hover:bg-zinc-800 active:scale-95 transition-all flex items-center gap-1"
+                title="Automaticky najít rámeček"
               >
                 <Sparkles className="w-3 h-3 text-white" />
                 <span>Auto</span>
-              </button>
-              <button
-                onClick={handleResetCorners}
-                className="px-2.5 py-1 rounded-lg bg-zinc-900 border border-zinc-700 text-zinc-400 text-[11px] hover:text-white"
-              >
-                <RotateCcw className="w-3 h-3" />
               </button>
             </div>
           </div>
@@ -515,37 +574,50 @@ export const ScannerEngine: React.FC<ScannerEngineProps> = ({
                       onMouseDown={(e) => handleCornerDrag(e, key)}
                       onTouchStart={(e) => handleCornerDrag(e, key)}
                       style={{
-                        transform: `translate(${posX - 18}px, ${posY - 18}px)`
+                        transform: `translate(${posX - 22}px, ${posY - 22}px)`,
+                        touchAction: 'none'
                       }}
-                      className={`corner-handle absolute top-0 left-0 w-9 h-9 rounded-full flex items-center justify-center z-30 transition-transform ${
+                      className={`corner-handle absolute top-0 left-0 w-11 h-11 rounded-full flex items-center justify-center z-30 transition-transform touch-none cursor-move select-none ${
                         isActive
-                          ? 'scale-125 bg-white ring-4 ring-white/40 shadow-xl'
-                          : 'bg-white shadow-md ring-2 ring-black'
+                          ? 'scale-125 bg-white ring-4 ring-white/50 shadow-2xl'
+                          : 'bg-white shadow-lg ring-2 ring-black'
                       }`}
                     >
-                      <div className="w-2.5 h-2.5 rounded-full bg-black" />
+                      <div className="w-3 h-3 rounded-full bg-black flex items-center justify-center">
+                        <div className="w-1 h-1 rounded-full bg-white" />
+                      </div>
                     </div>
                   );
                 })}
             </div>
           </div>
 
-          <div className="bg-black/95 p-4 border-t border-zinc-800 flex items-center justify-between gap-3">
+          <div className="bg-black/95 p-3 sm:p-4 border-t border-zinc-800 flex items-center gap-2">
             <button
               onClick={() => {
                 setStep('camera');
                 startCamera();
               }}
-              className="px-4 py-2.5 rounded-xl bg-zinc-900 border border-zinc-800 text-zinc-300 text-xs font-semibold hover:text-white"
+              className="px-3.5 py-3 rounded-xl bg-zinc-900 border border-zinc-800 text-zinc-400 text-xs font-semibold hover:text-white shrink-0"
+              title="Vyfotit znovu"
             >
               Znovu
             </button>
 
             <button
-              onClick={handlePerformWarp}
-              className="flex-1 py-3 rounded-xl bg-white hover:bg-zinc-200 text-black font-bold text-xs flex items-center justify-center gap-1.5 shadow-md active:scale-98 transition-all"
+              onClick={handleSkipCrop}
+              className="flex-1 py-3 px-2 rounded-xl bg-zinc-900 border border-zinc-700 text-zinc-200 font-semibold text-xs flex items-center justify-center gap-1 active:scale-95 transition-all text-center hover:text-white"
+              title="Použít čistý 16:9 střed bez posouvání rohů"
             >
-              <span>Oříznout do 16:9</span>
+              <Zap className="w-3.5 h-3.5 text-white" />
+              <span>Použít střed 16:9</span>
+            </button>
+
+            <button
+              onClick={() => handlePerformWarp()}
+              className="flex-1 py-3 px-3 rounded-xl bg-white hover:bg-zinc-200 text-black font-bold text-xs flex items-center justify-center gap-1 shadow-md active:scale-95 transition-all text-center"
+            >
+              <span>Potvrdit ořez</span>
               <ChevronRight className="w-4 h-4" />
             </button>
           </div>
