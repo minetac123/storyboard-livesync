@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import QRCode from 'qrcode';
-import { Smartphone, X, Copy, Check, ExternalLink, QrCode, Globe, Wifi } from 'lucide-react';
+import { Smartphone, X, Copy, Check, ExternalLink, QrCode, Globe } from 'lucide-react';
 import { StoryboardPanel } from '../types/storyboard';
 
 interface PhoneConnectModalProps {
@@ -22,9 +22,6 @@ export const PhoneConnectModal: React.FC<PhoneConnectModalProps> = ({
 }) => {
   const [targetPanelId, setTargetPanelId] = useState<string>(selectedPanelId || panels[0]?.id || 'panel-1');
   const [qrDataUrl, setQrDataUrl] = useState<string>('');
-  const [tunnelUrl, setTunnelUrl] = useState<string>('');
-  const [lanUrl, setLanUrl] = useState<string>('');
-  const [activeUrlType, setActiveUrlType] = useState<'tunnel' | 'lan'>('tunnel');
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
@@ -33,34 +30,18 @@ export const PhoneConnectModal: React.FC<PhoneConnectModalProps> = ({
     }
   }, [selectedPanelId]);
 
-  useEffect(() => {
-    if (isOpen) {
-      fetch('/api/network-info')
-        .then(res => res.json())
-        .then(data => {
-          if (data.tunnelUrl) {
-            setTunnelUrl(data.tunnelUrl);
-            setActiveUrlType('tunnel');
-          } else {
-            setActiveUrlType('lan');
-          }
-          if (data.lanUrl) {
-            setLanUrl(data.lanUrl);
-          }
-        })
-        .catch(() => {
-          if (typeof window !== 'undefined') {
-            setLanUrl(window.location.origin);
-          }
-        });
+  // Automatické zjištění správné veřejné URL adresy (GitHub Pages nebo lokální)
+  const getScanUrl = () => {
+    if (typeof window === 'undefined') {
+      return `https://minetac123.github.io/storyboard-livesync/scan/?room=${encodeURIComponent(roomId)}&panel=${encodeURIComponent(targetPanelId)}`;
     }
-  }, [isOpen]);
+    const origin = window.location.origin;
+    const isGh = window.location.hostname.includes('github.io') || window.location.pathname.includes('/storyboard-livesync');
+    const basePath = isGh ? '/storyboard-livesync' : '';
+    return `${origin}${basePath}/scan/?room=${encodeURIComponent(roomId)}&panel=${encodeURIComponent(targetPanelId)}`;
+  };
 
-  const currentBaseUrl = (activeUrlType === 'tunnel' && tunnelUrl) 
-    ? tunnelUrl 
-    : (lanUrl || (typeof window !== 'undefined' ? window.location.origin : ''));
-
-  const scanUrl = `${currentBaseUrl}/scan?room=${encodeURIComponent(roomId)}&panel=${encodeURIComponent(targetPanelId)}`;
+  const scanUrl = getScanUrl();
 
   useEffect(() => {
     if (isOpen && scanUrl) {
@@ -87,7 +68,7 @@ export const PhoneConnectModal: React.FC<PhoneConnectModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4">
-      <div className="bg-black border border-white/20 rounded-2xl w-full max-w-md p-6 shadow-2xl text-white relative animate-in fade-in zoom-in-95 duration-150">
+      <div className="bg-black border border-zinc-800 rounded-2xl w-full max-w-md p-6 shadow-2xl text-white relative animate-in fade-in zoom-in-95 duration-150">
         <button
           onClick={onClose}
           className="absolute top-4 right-4 p-2 text-zinc-400 hover:text-white rounded-full hover:bg-zinc-900 transition-colors"
@@ -97,59 +78,37 @@ export const PhoneConnectModal: React.FC<PhoneConnectModalProps> = ({
 
         {/* Hlavička */}
         <div className="flex items-center gap-3 mb-4">
-          <div className="w-10 h-10 rounded-xl bg-white text-black flex items-center justify-center font-bold">
+          <div className="w-9 h-9 rounded-xl bg-white text-black flex items-center justify-center font-bold">
             <Smartphone className="w-5 h-5" />
           </div>
           <div>
             <h2 className="text-base font-bold tracking-tight">Připojit fotoaparát mobilu</h2>
             <p className="text-xs text-zinc-400">
-              Naskenujte QR kód fotoaparátem v mobilu
+              Veřejná doména GitHub Pages – funguje na jakémkoli telefonu
             </p>
           </div>
         </div>
 
-        {/* Přepínač připojení (Tunel vs Wi-Fi) */}
-        {tunnelUrl && (
-          <div className="grid grid-cols-2 gap-2 mb-4 text-xs">
-            <button
-              onClick={() => setActiveUrlType('tunnel')}
-              className={`py-2 px-3 rounded-lg border text-center font-semibold transition-all flex items-center justify-center gap-1.5 ${
-                activeUrlType === 'tunnel'
-                  ? 'bg-white text-black border-white'
-                  : 'bg-zinc-950 text-zinc-400 border-zinc-800 hover:border-zinc-700'
-              }`}
-            >
-              <Globe className="w-3.5 h-3.5" />
-              <span>HTTPS Tunel (Funguje)</span>
-            </button>
-            <button
-              onClick={() => setActiveUrlType('lan')}
-              className={`py-2 px-3 rounded-lg border text-center font-semibold transition-all flex items-center justify-center gap-1.5 ${
-                activeUrlType === 'lan'
-                  ? 'bg-white text-black border-white'
-                  : 'bg-zinc-950 text-zinc-400 border-zinc-800 hover:border-zinc-700'
-              }`}
-            >
-              <Wifi className="w-3.5 h-3.5" />
-              <span>Místní Wi-Fi</span>
-            </button>
+        {/* Indikátor veřejné GitHub domény */}
+        <div className="mb-4 bg-zinc-950 p-2.5 rounded-xl border border-zinc-850 flex items-center justify-between text-xs">
+          <div className="flex items-center gap-2 text-zinc-300">
+            <Globe className="w-3.5 h-3.5 text-white" />
+            <span className="font-semibold text-white">GitHub Pages (HTTPS)</span>
           </div>
-        )}
-
-        {/* Výběr záběru */}
-        <div className="mb-4 bg-zinc-950 p-2.5 rounded-xl border border-zinc-800 flex items-center justify-between text-xs">
-          <span className="text-zinc-400">Cílový záběr:</span>
-          <select
-            value={targetPanelId}
-            onChange={(e) => setTargetPanelId(e.target.value)}
-            className="bg-zinc-900 border border-zinc-700 rounded-lg px-2.5 py-1 text-white font-medium focus:outline-none focus:border-white text-xs"
-          >
-            {panels.map((p) => (
-              <option key={p.id} value={p.id}>
-                Záběr #{p.order}
-              </option>
-            ))}
-          </select>
+          <div className="flex items-center gap-1.5">
+            <span className="text-zinc-500">Záběr:</span>
+            <select
+              value={targetPanelId}
+              onChange={(e) => setTargetPanelId(e.target.value)}
+              className="bg-zinc-900 border border-zinc-700 rounded-lg px-2 py-1 text-white font-medium focus:outline-none focus:border-white text-xs"
+            >
+              {panels.map((p) => (
+                <option key={p.id} value={p.id}>
+                  #{p.order}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
 
         {/* QR kód */}
@@ -166,12 +125,12 @@ export const PhoneConnectModal: React.FC<PhoneConnectModalProps> = ({
             </div>
           )}
           <p className="mt-2 text-[10px] font-mono tracking-wider text-black font-bold uppercase">
-            Namiřte fotoaparát telefonu na QR kód
+            Namiřte fotoaparát telefonu na tento QR kód
           </p>
         </div>
 
         {/* Odkaz & Kopírování */}
-        <div className="bg-zinc-950 p-2 rounded-xl border border-zinc-800 mb-4 flex items-center justify-between gap-2 text-xs font-mono">
+        <div className="bg-zinc-950 p-2 rounded-xl border border-zinc-850 mb-4 flex items-center justify-between gap-2 text-xs font-mono">
           <span className="truncate text-zinc-400 text-[11px] px-1">{scanUrl}</span>
           <button
             onClick={copyUrl}
@@ -191,7 +150,7 @@ export const PhoneConnectModal: React.FC<PhoneConnectModalProps> = ({
             className="flex-1 py-2.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-white text-xs font-semibold flex items-center justify-center gap-1.5 border border-zinc-800 transition-colors"
           >
             <ExternalLink className="w-3.5 h-3.5" />
-            <span>Otevřít v okně</span>
+            <span>Otevřít odkaz</span>
           </a>
 
           <button
