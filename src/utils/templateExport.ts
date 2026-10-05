@@ -2,21 +2,22 @@ import jsPDF from 'jspdf';
 import QRCode from 'qrcode';
 import { StoryboardPanel } from '../types/storyboard';
 
+import { getMobileScanUrl } from './urlHelper';
+
 interface GenerateTemplateOptions {
-  projectTitle: string;
-  director: string;
+  projectTitle?: string;
+  director?: string;
   roomId: string;
-  baseUrl: string;
+  baseUrl?: string;
   panels: StoryboardPanel[];
   panelsPerPage?: number;
 }
 
 export async function generatePrintableStoryboardTemplate(options: GenerateTemplateOptions): Promise<void> {
   const {
-    projectTitle = 'Filmový Storyboard',
-    director = 'Režisér',
+    projectTitle = '',
+    director = '',
     roomId,
-    baseUrl,
     panels,
     panelsPerPage = 6
   } = options;
@@ -46,30 +47,32 @@ export async function generatePrintableStoryboardTemplate(options: GenerateTempl
       doc.addPage();
     }
 
-    // Horní banner stránky
-    doc.setFillColor(18, 24, 38);
+    // Horní banner stránky - čistě černobílý
+    doc.setFillColor(0, 0, 0);
     doc.rect(marginX, 8, pageWidth - marginX * 2, 8, 'F');
 
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(10);
+    doc.setFontSize(9.5);
     doc.setTextColor(255, 255, 255);
     doc.text('STORYBOARD LIVESYNC - PREDLOHA PRO KRESBU', marginX + 3, 13.5);
 
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(8);
-    doc.setTextColor(200, 210, 230);
-    doc.text(`MISTNOST: ${roomId}   |   STRANA ${pageIdx + 1} Z ${totalPages}`, pageWidth - marginX - 52, 13.5);
+    doc.setTextColor(230, 230, 230);
+    doc.text(`MISTNOST: ${roomId}   |   STRANA ${pageIdx + 1} Z ${totalPages}`, pageWidth - marginX - 55, 13.5);
 
-    // Informace o filmu
+    // Informace o filmu (pouze pokud jsou vyplněné)
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(9);
-    doc.setTextColor(40, 40, 40);
-    doc.text(`PROJEKT: ${projectTitle}`, marginX, 18.5);
+    doc.setFontSize(8.5);
+    doc.setTextColor(0, 0, 0);
+    const pTitle = projectTitle?.trim() ? `PROJEKT: ${projectTitle.trim().toUpperCase()}` : 'PROJEKT: ____________________';
+    doc.text(pTitle, marginX, 18.5);
 
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(8);
-    doc.setTextColor(80, 80, 80);
-    doc.text(`REZIE: ${director}   |   FORMAT 16:9`, marginX + 75, 18.5);
+    doc.setTextColor(60, 60, 60);
+    const pDir = director?.trim() ? `REZIE: ${director.trim().toUpperCase()}` : 'REZIE: ____________________';
+    doc.text(`${pDir}   |   FORMAT 16:9`, marginX + 85, 18.5);
 
     // Kreslení jednotlivých políček záběrů
     const startIdx = pageIdx * panelsPerPage;
@@ -96,16 +99,16 @@ export async function generatePrintableStoryboardTemplate(options: GenerateTempl
       const y = marginTop + 4 + row * (panelHeight + gapY);
 
       // Ohraničení políčka
-      doc.setDrawColor(210, 215, 225);
+      doc.setDrawColor(200, 200, 200);
       doc.setLineWidth(0.3);
       doc.roundedRect(x, y, colWidth, panelHeight, 2, 2, 'S');
 
       // Záhlaví políčka
-      doc.setFillColor(240, 243, 248);
+      doc.setFillColor(245, 245, 245);
       doc.roundedRect(x + 1, y + 1, colWidth - 2, 6, 1, 1, 'F');
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(8);
-      doc.setTextColor(20, 20, 20);
+      doc.setTextColor(0, 0, 0);
       doc.text(`ZABER #${panel.order || panelIndex + 1}   [SCENA ${panel.scene || '1'} / ZABER ${panel.shot || panelIndex + 1}]`, x + 3, y + 5);
 
       // Kreslicí rámeček 16:9
@@ -162,7 +165,7 @@ export async function generatePrintableStoryboardTemplate(options: GenerateTempl
       const qrX = x + colWidth - qrSize - 3;
       const qrY = notesY - 0.5;
 
-      const scanUrl = `${baseUrl}/scan?room=${encodeURIComponent(roomId)}&panel=${encodeURIComponent(panel.id)}`;
+      const scanUrl = getMobileScanUrl(roomId, panel.id);
       try {
         const qrDataUrl = await QRCode.toDataURL(scanUrl, {
           margin: 1,

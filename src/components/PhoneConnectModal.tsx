@@ -3,6 +3,8 @@ import QRCode from 'qrcode';
 import { Smartphone, X, Copy, Check, ExternalLink, QrCode, Globe } from 'lucide-react';
 import { StoryboardPanel } from '../types/storyboard';
 
+import { getMobileScanUrl } from '../utils/urlHelper';
+
 interface PhoneConnectModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -30,18 +32,7 @@ export const PhoneConnectModal: React.FC<PhoneConnectModalProps> = ({
     }
   }, [selectedPanelId]);
 
-  // Automatické zjištění správné veřejné URL adresy (GitHub Pages nebo lokální)
-  const getScanUrl = () => {
-    if (typeof window === 'undefined') {
-      return `https://minetac123.github.io/storyboard-livesync/scan/?room=${encodeURIComponent(roomId)}&panel=${encodeURIComponent(targetPanelId)}`;
-    }
-    const origin = window.location.origin;
-    const isGh = window.location.hostname.includes('github.io') || window.location.pathname.includes('/storyboard-livesync');
-    const basePath = isGh ? '/storyboard-livesync' : '';
-    return `${origin}${basePath}/scan/?room=${encodeURIComponent(roomId)}&panel=${encodeURIComponent(targetPanelId)}`;
-  };
-
-  const scanUrl = getScanUrl();
+  const scanUrl = getMobileScanUrl(roomId, targetPanelId);
 
   useEffect(() => {
     if (isOpen && scanUrl) {

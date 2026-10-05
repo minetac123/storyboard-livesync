@@ -14,6 +14,17 @@ export default function MobileScanPage() {
   const [isConnected, setIsConnected] = useState<boolean>(false);
 
   useEffect(() => {
+    // 1. Okamžité načtení z window.location.search (funguje spolehlivě v Next.js static exportu bez zpoždění)
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const r = params.get('room');
+      const p = params.get('panel');
+      if (r) setRoomId(r);
+      if (p) setPanelId(p);
+    }
+  }, []);
+
+  useEffect(() => {
     if (router.isReady) {
       if (room && typeof room === 'string') {
         setRoomId(room);

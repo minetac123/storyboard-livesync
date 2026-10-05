@@ -47,19 +47,23 @@ export async function exportPresentationPDF(options: ExportPresentationOptions):
   doc.setTextColor(0, 0, 0);
   doc.text('STORYBOARD', marginX + 11, 25);
 
-  // Hlavní název filmu
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(28);
-  doc.setTextColor(255, 255, 255);
-  const displayTitle = (project.title || '').trim() || 'FILMOVY PROJEKT';
-  doc.text(displayTitle.toUpperCase(), marginX + 8, 45);
+  // Hlavní název filmu (pouze pokud je vyplněn uživatelem)
+  const displayTitle = (project.title || '').trim();
+  if (displayTitle) {
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(28);
+    doc.setTextColor(255, 255, 255);
+    doc.text(displayTitle.toUpperCase(), marginX + 8, 45);
+  }
 
-  // Režisér / Výtvarník
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(13);
-  doc.setTextColor(200, 200, 200);
-  const displayDirector = (project.director || '').trim() || 'NEUVEDENO';
-  doc.text(`REZIE / VYTVARNIK: ${displayDirector.toUpperCase()}`, marginX + 8, 56);
+  // Režisér / Výtvarník (pouze pokud je vyplněn uživatelem)
+  const displayDirector = (project.director || '').trim();
+  if (displayDirector) {
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(13);
+    doc.setTextColor(200, 200, 200);
+    doc.text(`REZIE / VYTVARNIK: ${displayDirector.toUpperCase()}`, marginX + 8, 56);
+  }
 
   // Dělící čára
   doc.setDrawColor(100, 100, 100);

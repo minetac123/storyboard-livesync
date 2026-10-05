@@ -75,10 +75,20 @@ export const Header: React.FC<HeaderProps> = ({
                 className="text-xs text-zinc-400 hover:text-white font-medium flex items-center gap-1.5 text-left"
                 title="Klepnutím vyplníte název a režiséra"
               >
-                <span>{project.title || 'Název filmu'}</span>
-                <span className="text-zinc-600">•</span>
-                <span>{project.director || 'Režisér'}</span>
-                <Settings className="w-3 h-3 text-zinc-500" />
+                {project.title || project.director ? (
+                  <>
+                    <span className="text-white font-medium">{project.title || '—'}</span>
+                    {project.director && (
+                      <>
+                        <span className="text-zinc-600">•</span>
+                        <span>{project.director}</span>
+                      </>
+                    )}
+                  </>
+                ) : (
+                  <span className="text-zinc-500 hover:text-zinc-300">+ Vyplnit název a režiséra</span>
+                )}
+                <Settings className="w-3 h-3 text-zinc-500 ml-1" />
               </button>
             </div>
           </div>

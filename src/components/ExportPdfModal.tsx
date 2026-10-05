@@ -38,47 +38,47 @@ export const ExportPdfModal: React.FC<ExportPdfModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-      <div className="bg-studio-900 border border-studio-800 rounded-3xl w-full max-w-lg p-6 shadow-2xl text-white relative animate-in fade-in zoom-in-95 duration-200">
+    <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4">
+      <div className="bg-black border border-zinc-800 rounded-2xl w-full max-w-lg p-6 shadow-2xl text-white relative animate-in fade-in zoom-in-95 duration-150">
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 p-2 text-studio-400 hover:text-white rounded-full hover:bg-studio-800 transition-colors"
+          className="absolute top-4 right-4 p-2 text-zinc-400 hover:text-white rounded-full hover:bg-zinc-900 transition-colors"
         >
           <X className="w-5 h-5" />
         </button>
 
         <div className="flex items-center gap-3 mb-5">
-          <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
-            <Film className="w-6 h-6" />
+          <div className="w-10 h-10 rounded-xl bg-white text-black flex items-center justify-center font-bold">
+            <Film className="w-5 h-5" />
           </div>
           <div>
-            <h2 className="text-xl font-bold">Export prezentace storyboardu</h2>
-            <p className="text-xs text-studio-400">
-              Kompletní filmový PDF portfolio dokument pro školu, štáb a prezentaci
+            <h2 className="text-base font-bold tracking-tight">Export prezentace storyboardu (PDF)</h2>
+            <p className="text-xs text-zinc-400">
+              Černobílý prezentační dokument pro filmovou školu, štáb a režijní knihu
             </p>
           </div>
         </div>
 
         {/* Shrnutí projektu */}
-        <div className="bg-studio-950 p-4 rounded-xl border border-studio-800 mb-5 text-xs space-y-2">
+        <div className="bg-zinc-950 p-4 rounded-xl border border-zinc-850 mb-5 text-xs space-y-2">
           <div className="flex items-center justify-between">
-            <span className="text-studio-400">Název projektu:</span>
-            <span className="font-bold text-white">{project.title}</span>
+            <span className="text-zinc-400">Název projektu:</span>
+            <span className="font-bold text-white">{project.title || '—'}</span>
           </div>
           <div className="flex items-center justify-between">
-            <span className="text-studio-400">Režisér:</span>
-            <span className="font-medium text-slate-200">{project.director}</span>
+            <span className="text-zinc-400">Režisér:</span>
+            <span className="font-medium text-white">{project.director || '—'}</span>
           </div>
           <div className="flex items-center justify-between">
-            <span className="text-studio-400">Nakresleno:</span>
-            <div className="flex items-center gap-1.5 font-mono">
-              <span className={`font-bold ${panelsWithImages === totalPanels ? 'text-emerald-400' : 'text-amber-400'}`}>
+            <span className="text-zinc-400">Nakresleno:</span>
+            <div className="flex items-center gap-1.5 font-mono text-xs">
+              <span className="font-bold text-white">
                 {panelsWithImages} z {totalPanels} záběrů
               </span>
               {panelsWithImages === totalPanels ? (
-                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                <CheckCircle2 className="w-3.5 h-3.5 text-white" />
               ) : (
-                <AlertCircle className="w-3.5 h-3.5 text-amber-400" />
+                <AlertCircle className="w-3.5 h-3.5 text-zinc-400" />
               )}
             </div>
           </div>
@@ -86,7 +86,7 @@ export const ExportPdfModal: React.FC<ExportPdfModalProps> = ({
 
         {/* Rozvržení prezentace */}
         <div className="mb-6">
-          <label className="block text-xs font-bold text-studio-400 uppercase tracking-wider mb-2">
+          <label className="block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-2">
             Rozvržení stránek
           </label>
           <div className="grid grid-cols-2 gap-3">
@@ -94,13 +94,13 @@ export const ExportPdfModal: React.FC<ExportPdfModalProps> = ({
               onClick={() => setLayout('2-per-page')}
               className={`p-3.5 rounded-xl border text-left transition-all ${
                 layout === '2-per-page'
-                  ? 'border-emerald-500 bg-emerald-500/10 text-white'
-                  : 'border-studio-800 bg-studio-950 text-studio-400 hover:border-studio-700'
+                  ? 'border-white bg-zinc-900 text-white'
+                  : 'border-zinc-800 bg-zinc-950 text-zinc-400 hover:border-zinc-700'
               }`}
             >
-              <div className="font-bold text-xs mb-1">2 záběry na stránku</div>
-              <p className="text-[11px] opacity-80 leading-relaxed">
-                Velké kresby ve vysokém rozlišení s kompletními poznámkami. Ideální pro filmové školy.
+              <div className="font-bold text-xs mb-1 text-white">2 záběry na stránku</div>
+              <p className="text-[11px] text-zinc-400 leading-relaxed">
+                Velké kresby ve vysokém rozlišení s kompletními poznámkami.
               </p>
             </button>
 
@@ -108,23 +108,23 @@ export const ExportPdfModal: React.FC<ExportPdfModalProps> = ({
               onClick={() => setLayout('4-per-page')}
               className={`p-3.5 rounded-xl border text-left transition-all ${
                 layout === '4-per-page'
-                  ? 'border-emerald-500 bg-emerald-500/10 text-white'
-                  : 'border-studio-800 bg-studio-950 text-studio-400 hover:border-studio-700'
+                  ? 'border-white bg-zinc-900 text-white'
+                  : 'border-zinc-800 bg-zinc-950 text-zinc-400 hover:border-zinc-700'
               }`}
             >
-              <div className="font-bold text-xs mb-1">4 záběry na stránku</div>
-              <p className="text-[11px] opacity-80 leading-relaxed">
-                Kompaktní mřížka 2×2 pro rychlý přehled celé sekvence na place.
+              <div className="font-bold text-xs mb-1 text-white">4 záběry na stránku</div>
+              <p className="text-[11px] text-zinc-400 leading-relaxed">
+                Kompaktní mřížka 2×2 pro rychlý přehled celé sekvence.
               </p>
             </button>
           </div>
         </div>
 
-        {/* Tlačítko exportu */}
+        {/* Tlačítko exportu (Černobílé) */}
         <button
           onClick={handleExport}
           disabled={isExporting}
-          className="w-full py-3.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 text-studio-950 font-bold text-sm flex items-center justify-center gap-2 shadow-lg transition-all disabled:opacity-50"
+          className="w-full py-3 rounded-xl bg-white hover:bg-zinc-200 text-black font-bold text-xs flex items-center justify-center gap-2 shadow-sm transition-all disabled:opacity-50 active:scale-98"
         >
           {isExporting ? (
             <span>Sestavuji filmové PDF...</span>

@@ -334,18 +334,18 @@ export const ScannerEngine: React.FC<ScannerEngineProps> = ({
       {step === 'camera' && (
         <div className="flex-1 flex flex-col justify-between relative overflow-hidden">
           {/* Horní lišta s číslem záběru */}
-          <div className="z-10 bg-studio-950/90 px-4 py-3 flex items-center justify-between border-b border-studio-800">
+          <div className="z-10 bg-black/90 px-4 py-3 flex items-center justify-between border-b border-zinc-800">
             <div className="flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse" />
-              <span className="text-xs text-studio-400">ZÁBĚR:</span>
-              <span className="font-bold text-amber-300 text-sm font-mono">
+              <span className="w-2 h-2 rounded-full bg-white" />
+              <span className="text-xs text-zinc-400">ZÁBĚR:</span>
+              <span className="font-bold text-white text-sm font-mono">
                 {currentPanelId.toUpperCase()}
               </span>
             </div>
 
             <button
               onClick={() => fileInputRef.current?.click()}
-              className="px-2.5 py-1 rounded-lg bg-studio-900 border border-studio-800 text-studio-300 text-xs flex items-center gap-1"
+              className="px-2.5 py-1 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-300 text-xs flex items-center gap-1 hover:text-white"
             >
               <Upload className="w-3.5 h-3.5" />
               <span>Galerie</span>
@@ -366,14 +366,14 @@ export const ScannerEngine: React.FC<ScannerEngineProps> = ({
 
                 {/* 16:9 Vodící rámeček */}
                 <div className="absolute inset-0 pointer-events-none flex items-center justify-center p-4">
-                  <div className="w-full max-w-md aspect-video border-2 border-dashed border-amber-400/80 rounded-xl relative shadow-2xl">
-                    <div className="absolute -top-1 -left-1 w-6 h-6 border-t-4 border-l-4 border-amber-400" />
-                    <div className="absolute -top-1 -right-1 w-6 h-6 border-t-4 border-r-4 border-amber-400" />
-                    <div className="absolute -bottom-1 -left-1 w-6 h-6 border-b-4 border-l-4 border-amber-400" />
-                    <div className="absolute -bottom-1 -right-1 w-6 h-6 border-b-4 border-r-4 border-amber-400" />
+                  <div className="w-full max-w-md aspect-video border-2 border-dashed border-white/80 rounded-xl relative shadow-2xl">
+                    <div className="absolute -top-1 -left-1 w-6 h-6 border-t-4 border-l-4 border-white" />
+                    <div className="absolute -top-1 -right-1 w-6 h-6 border-t-4 border-r-4 border-white" />
+                    <div className="absolute -bottom-1 -left-1 w-6 h-6 border-b-4 border-l-4 border-white" />
+                    <div className="absolute -bottom-1 -right-1 w-6 h-6 border-b-4 border-r-4 border-white" />
 
                     <div className="absolute inset-0 flex items-center justify-center">
-                      <span className="text-[11px] font-mono tracking-widest text-amber-300 bg-black/70 px-2 py-0.5 rounded">
+                      <span className="text-[11px] font-mono tracking-widest text-white bg-black/80 px-2.5 py-1 rounded border border-zinc-700">
                         ZAMĚŘTE RÁMEČEK 16:9
                       </span>
                     </div>
@@ -383,22 +383,22 @@ export const ScannerEngine: React.FC<ScannerEngineProps> = ({
             ) : (
               /* Pokud mobilní prohlížeč nepovolí přímé webové video, nabídneme okamžité nativní fotoaparát tlačítko */
               <div className="flex flex-col items-center justify-center text-center p-6 max-w-xs space-y-4">
-                <div className="w-20 h-20 rounded-3xl bg-amber-500/10 border-2 border-amber-500/30 flex items-center justify-center text-amber-400 shadow-xl">
+                <div className="w-20 h-20 rounded-2xl bg-white text-black flex items-center justify-center shadow-xl">
                   <Camera className="w-10 h-10" />
                 </div>
                 <div>
                   <h3 className="text-base font-bold text-white mb-1">
                     Vyfoťte kresbu z papíru
                   </h3>
-                  <p className="text-xs text-studio-400 leading-relaxed">
+                  <p className="text-xs text-zinc-400 leading-relaxed">
                     Klepnutím níže se otevře fotoaparát telefonu pro vyfocení kresby ve vysokém rozlišení.
                   </p>
                 </div>
                 <button
                   onClick={() => nativeCameraInputRef.current?.click()}
-                  className="w-full py-4 rounded-2xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-studio-950 font-bold text-sm shadow-xl flex items-center justify-center gap-2 active:scale-95 transition-all"
+                  className="w-full py-3.5 rounded-xl bg-white hover:bg-zinc-200 text-black font-bold text-xs shadow-xl flex items-center justify-center gap-2 active:scale-95 transition-all"
                 >
-                  <Camera className="w-5 h-5" />
+                  <Camera className="w-4 h-4" />
                   <span>Otevřít fotoaparát</span>
                 </button>
               </div>
@@ -407,10 +407,10 @@ export const ScannerEngine: React.FC<ScannerEngineProps> = ({
 
           {/* Spodní spoušť (pokud běží živé video) */}
           {isLiveStreamSupported && isCameraActive && (
-            <div className="z-10 bg-studio-950/90 p-6 flex items-center justify-around border-t border-studio-800">
+            <div className="z-10 bg-black/90 p-5 flex items-center justify-around border-t border-zinc-800">
               <button
                 onClick={() => nativeCameraInputRef.current?.click()}
-                className="p-3 rounded-full bg-studio-900 border border-studio-800 text-studio-300"
+                className="p-3 rounded-full bg-zinc-900 border border-zinc-800 text-zinc-300"
                 title="Fotoaparát mobilu"
               >
                 <Camera className="w-5 h-5" />
@@ -418,14 +418,14 @@ export const ScannerEngine: React.FC<ScannerEngineProps> = ({
 
               <button
                 onClick={handleShutter}
-                className="w-18 h-18 rounded-full border-4 border-white/80 p-1.5 flex items-center justify-center transition-transform active:scale-90"
+                className="w-16 h-16 rounded-full border-4 border-white p-1 flex items-center justify-center transition-transform active:scale-90"
               >
-                <div className="w-14 h-14 rounded-full bg-amber-500 shadow-lg shadow-amber-500/50" />
+                <div className="w-12 h-12 rounded-full bg-white shadow-lg" />
               </button>
 
               <button
                 onClick={() => fileInputRef.current?.click()}
-                className="p-3 rounded-full bg-studio-900 border border-studio-800 text-studio-300"
+                className="p-3 rounded-full bg-zinc-900 border border-zinc-800 text-zinc-300"
                 title="Galerie"
               >
                 <Upload className="w-5 h-5" />
@@ -438,21 +438,21 @@ export const ScannerEngine: React.FC<ScannerEngineProps> = ({
       {/* --- KROK 2: Ořez a narovnání --- */}
       {step === 'crop' && capturedImage && corners && (
         <div className="flex-1 flex flex-col justify-between relative bg-black">
-          <div className="bg-studio-950/90 px-4 py-3 flex items-center justify-between border-b border-studio-800 text-xs">
-            <span className="font-semibold text-amber-300">
+          <div className="bg-black/90 px-4 py-3 flex items-center justify-between border-b border-zinc-800 text-xs">
+            <span className="font-semibold text-white">
               📐 Upravte 4 rohy kresby
             </span>
             <div className="flex items-center gap-2">
               <button
                 onClick={handleAutoDetect}
-                className="px-2 py-1 rounded-lg bg-studio-900 border border-studio-700 text-studio-300 flex items-center gap-1 text-[11px]"
+                className="px-2.5 py-1 rounded-lg bg-zinc-900 border border-zinc-700 text-zinc-300 flex items-center gap-1 text-[11px] hover:text-white"
               >
-                <Sparkles className="w-3 h-3 text-amber-400" />
+                <Sparkles className="w-3 h-3 text-white" />
                 <span>Auto</span>
               </button>
               <button
                 onClick={handleResetCorners}
-                className="px-2 py-1 rounded-lg bg-studio-900 border border-studio-700 text-studio-400 text-[11px]"
+                className="px-2.5 py-1 rounded-lg bg-zinc-900 border border-zinc-700 text-zinc-400 text-[11px] hover:text-white"
               >
                 <RotateCcw className="w-3 h-3" />
               </button>
@@ -488,9 +488,9 @@ export const ScannerEngine: React.FC<ScannerEngineProps> = ({
                     return (
                       <polygon
                         points={`${p1.x},${p1.y} ${p2.x},${p2.y} ${p3.x},${p3.y} ${p4.x},${p4.y}`}
-                        fill="rgba(245, 158, 11, 0.2)"
-                        stroke="#f59e0b"
-                        strokeWidth="3"
+                        fill="rgba(255, 255, 255, 0.2)"
+                        stroke="#ffffff"
+                        strokeWidth="2.5"
                         strokeDasharray="4 2"
                       />
                     );
@@ -519,31 +519,31 @@ export const ScannerEngine: React.FC<ScannerEngineProps> = ({
                       }}
                       className={`corner-handle absolute top-0 left-0 w-9 h-9 rounded-full flex items-center justify-center z-30 transition-transform ${
                         isActive
-                          ? 'scale-125 bg-amber-400 ring-4 ring-amber-400/40 shadow-xl'
-                          : 'bg-amber-500 shadow-md ring-2 ring-white'
+                          ? 'scale-125 bg-white ring-4 ring-white/40 shadow-xl'
+                          : 'bg-white shadow-md ring-2 ring-black'
                       }`}
                     >
-                      <div className="w-2.5 h-2.5 rounded-full bg-studio-950" />
+                      <div className="w-2.5 h-2.5 rounded-full bg-black" />
                     </div>
                   );
                 })}
             </div>
           </div>
 
-          <div className="bg-studio-950/95 p-4 border-t border-studio-800 flex items-center justify-between gap-3">
+          <div className="bg-black/95 p-4 border-t border-zinc-800 flex items-center justify-between gap-3">
             <button
               onClick={() => {
                 setStep('camera');
                 startCamera();
               }}
-              className="px-4 py-2.5 rounded-xl bg-studio-900 border border-studio-800 text-studio-300 text-xs font-semibold"
+              className="px-4 py-2.5 rounded-xl bg-zinc-900 border border-zinc-800 text-zinc-300 text-xs font-semibold hover:text-white"
             >
               Znovu
             </button>
 
             <button
               onClick={handlePerformWarp}
-              className="flex-1 py-3 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 text-studio-950 font-bold text-xs flex items-center justify-center gap-1.5 shadow-md"
+              className="flex-1 py-3 rounded-xl bg-white hover:bg-zinc-200 text-black font-bold text-xs flex items-center justify-center gap-1.5 shadow-md active:scale-98 transition-all"
             >
               <span>Oříznout do 16:9</span>
               <ChevronRight className="w-4 h-4" />
@@ -555,20 +555,20 @@ export const ScannerEngine: React.FC<ScannerEngineProps> = ({
       {/* --- KROK 3: Úprava a odeslání --- */}
       {step === 'filter' && finalDataUrl && (
         <div className="flex-1 flex flex-col justify-between relative bg-black">
-          <div className="bg-studio-950/90 px-4 py-3 flex items-center justify-between border-b border-studio-800 text-xs">
-            <span className="font-semibold text-slate-200">
+          <div className="bg-black/90 px-4 py-3 flex items-center justify-between border-b border-zinc-800 text-xs">
+            <span className="font-semibold text-white">
               Náhled výsledné skici (16:9)
             </span>
             <button
               onClick={() => setStep('crop')}
-              className="text-amber-400 hover:underline"
+              className="text-zinc-400 hover:text-white underline"
             >
               Upravit ořez
             </button>
           </div>
 
           <div className="flex-1 flex items-center justify-center p-4">
-            <div className="w-full max-w-lg aspect-video rounded-xl overflow-hidden border border-studio-800 shadow-2xl bg-studio-950">
+            <div className="w-full max-w-lg aspect-video rounded-xl overflow-hidden border border-zinc-800 shadow-2xl bg-black">
               <img
                 src={finalDataUrl}
                 alt="Oříznutá skica"
@@ -577,38 +577,38 @@ export const ScannerEngine: React.FC<ScannerEngineProps> = ({
             </div>
           </div>
 
-          <div className="bg-studio-950/95 p-4 border-t border-studio-800 space-y-4">
+          <div className="bg-black/95 p-4 border-t border-zinc-800 space-y-4">
             {/* Jednoduchá volba stylu */}
             <div className="grid grid-cols-3 gap-2 text-xs">
               <button
                 onClick={() => handleFilterChange('contrast-boost')}
-                className={`py-2 rounded-xl font-medium text-center ${
+                className={`py-2 rounded-xl font-medium text-center transition-colors ${
                   filterMode === 'contrast-boost'
-                    ? 'bg-amber-500 text-studio-950 font-bold'
-                    : 'bg-studio-900 text-studio-300 border border-studio-800'
+                    ? 'bg-white text-black font-bold'
+                    : 'bg-zinc-900 text-zinc-300 border border-zinc-800 hover:text-white'
                 }`}
               >
-                ✏️ Zvýraznit tužku
+                ✏️ Tužka
               </button>
               <button
                 onClick={() => handleFilterChange('bw-ink')}
-                className={`py-2 rounded-xl font-medium text-center ${
+                className={`py-2 rounded-xl font-medium text-center transition-colors ${
                   filterMode === 'bw-ink'
-                    ? 'bg-amber-500 text-studio-950 font-bold'
-                    : 'bg-studio-900 text-studio-300 border border-studio-800'
+                    ? 'bg-white text-black font-bold'
+                    : 'bg-zinc-900 text-zinc-300 border border-zinc-800 hover:text-white'
                 }`}
               >
-                🖋️ Černobílý inkoust
+                🖋️ Inkoust
               </button>
               <button
                 onClick={() => handleFilterChange('original')}
-                className={`py-2 rounded-xl font-medium text-center ${
+                className={`py-2 rounded-xl font-medium text-center transition-colors ${
                   filterMode === 'original'
-                    ? 'bg-amber-500 text-studio-950 font-bold'
-                    : 'bg-studio-900 text-studio-300 border border-studio-800'
+                    ? 'bg-white text-black font-bold'
+                    : 'bg-zinc-900 text-zinc-300 border border-zinc-800 hover:text-white'
                 }`}
               >
-                🎨 Původní barvy
+                🎨 Původní
               </button>
             </div>
 
@@ -616,13 +616,13 @@ export const ScannerEngine: React.FC<ScannerEngineProps> = ({
             <button
               onClick={handleSendToPc}
               disabled={isSending}
-              className="w-full py-4 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 text-studio-950 font-bold text-sm flex items-center justify-center gap-2 shadow-xl active:scale-[0.98] transition-all disabled:opacity-50"
+              className="w-full py-3.5 rounded-xl bg-white hover:bg-zinc-200 text-black font-bold text-xs flex items-center justify-center gap-2 shadow-sm active:scale-98 transition-all disabled:opacity-50"
             >
               {isSending ? (
                 <span>Odesílám do počítače...</span>
               ) : (
                 <>
-                  <Send className="w-5 h-5" />
+                  <Send className="w-4 h-4" />
                   <span>Odeslat do PC ({currentPanelId.toUpperCase()})</span>
                 </>
               )}
@@ -633,22 +633,22 @@ export const ScannerEngine: React.FC<ScannerEngineProps> = ({
 
       {/* --- KROK 4: Úspěšně odesláno --- */}
       {step === 'success' && (
-        <div className="flex-1 flex flex-col items-center justify-center p-6 text-center bg-studio-950">
-          <div className="w-20 h-20 rounded-full bg-emerald-500/20 border-2 border-emerald-400 flex items-center justify-center text-emerald-400 mb-4 animate-bounce">
-            <Check className="w-10 h-10 stroke-[3]" />
+        <div className="flex-1 flex flex-col items-center justify-center p-6 text-center bg-black">
+          <div className="w-16 h-16 rounded-full bg-white text-black flex items-center justify-center mb-4">
+            <Check className="w-8 h-8 stroke-[3]" />
           </div>
 
-          <h2 className="text-2xl font-bold text-white mb-2">
+          <h2 className="text-xl font-bold text-white mb-2">
             Odesláno na počítač!
           </h2>
-          <p className="text-xs text-studio-300 max-w-xs mb-8">
+          <p className="text-xs text-zinc-400 max-w-xs mb-8">
             Skica byla automaticky narovnána do 16:9 a ihned se zobrazila v záběru {currentPanelId.toUpperCase()} na monitoru.
           </p>
 
           <div className="w-full max-w-xs space-y-3">
             <button
               onClick={handleNextPanel}
-              className="w-full py-4 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 text-studio-950 font-bold text-sm flex items-center justify-center gap-2 shadow-lg active:scale-95 transition-all"
+              className="w-full py-3.5 rounded-xl bg-white hover:bg-zinc-200 text-black font-bold text-xs flex items-center justify-center gap-2 shadow-sm active:scale-98 transition-all"
             >
               <span>Skenovat další záběr</span>
               <ChevronRight className="w-4 h-4" />
@@ -659,7 +659,7 @@ export const ScannerEngine: React.FC<ScannerEngineProps> = ({
                 setStep('camera');
                 startCamera();
               }}
-              className="w-full py-2.5 rounded-xl bg-studio-900 border border-studio-800 text-studio-300 text-xs font-semibold"
+              className="w-full py-2.5 rounded-xl bg-zinc-900 border border-zinc-800 text-zinc-300 text-xs font-semibold hover:text-white"
             >
               Vyfotit tento záběr znovu
             </button>
@@ -667,7 +667,7 @@ export const ScannerEngine: React.FC<ScannerEngineProps> = ({
             {onClose && (
               <button
                 onClick={onClose}
-                className="w-full py-2 text-studio-500 text-xs"
+                className="w-full py-2 text-zinc-500 hover:text-white text-xs"
               >
                 Zavřít skener
               </button>
