@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Printer, X, Download, FileText, QrCode } from 'lucide-react';
+import { Printer, X, Download, FileText } from 'lucide-react';
 import { StoryboardProject } from '../types/storyboard';
 import { generatePrintableStoryboardTemplate } from '../utils/templateExport';
 
@@ -68,17 +68,17 @@ export const PrintTemplateModal: React.FC<PrintTemplateModalProps> = ({
           <div className="bg-zinc-950 p-3 rounded-xl border border-zinc-850">
             <div className="text-white font-bold mb-1">16:9 rámečky</div>
             <p className="text-zinc-400 text-[11px] leading-relaxed">
-              Černé rohové značky pro přesný automatický ořez mobilem.
+              Optické rohové značky pro přesný automatický ořez mobilem.
             </p>
           </div>
 
           <div className="bg-zinc-950 p-3 rounded-xl border border-zinc-850">
             <div className="text-white font-bold mb-1 flex items-center gap-1">
-              <QrCode className="w-3.5 h-3.5" />
-              QR kód
+              <FileText className="w-3.5 h-3.5" />
+              Čistá plocha
             </div>
             <p className="text-zinc-400 text-[11px] leading-relaxed">
-              Každý záběr má vlastní QR pro okamžité odeslání do správného políčka.
+              Žádné rušivé nápisy, reklamy ani QR kódy na papíře.
             </p>
           </div>
 
@@ -88,7 +88,7 @@ export const PrintTemplateModal: React.FC<PrintTemplateModalProps> = ({
               Řádky pro text
             </div>
             <p className="text-zinc-400 text-[11px] leading-relaxed">
-              Místo na popis akce, kamery a dialogů.
+              Plná šířka pro popis kamery, děje a dialogů.
             </p>
           </div>
         </div>
@@ -125,7 +125,7 @@ export const PrintTemplateModal: React.FC<PrintTemplateModalProps> = ({
           className="w-full py-3 rounded-xl bg-white hover:bg-zinc-200 text-black font-bold text-xs flex items-center justify-center gap-2 shadow-sm transition-all disabled:opacity-50 active:scale-98"
         >
           {isGenerating ? (
-            <span>Generuji PDF s QR kódy...</span>
+            <span>Generuji PDF šablonu...</span>
           ) : (
             <>
               <Download className="w-4 h-4" />

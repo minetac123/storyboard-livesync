@@ -1,7 +1,5 @@
 import jsPDF from 'jspdf';
-import QRCode from 'qrcode';
 import { StoryboardPanel } from '../types/storyboard';
-import { getMobileScanUrl } from './urlHelper';
 
 interface GenerateTemplateOptions {
   projectTitle?: string;
@@ -39,7 +37,7 @@ export async function generatePrintableStoryboardTemplate(options: GenerateTempl
 
   const colCount = 2;
   const colWidth = (pageWidth - marginX * 2 - 8) / 2;
-  const panelHeight = 85;
+  const panelHeight = 84;
   const gapX = 8;
   const gapY = 6;
 
@@ -153,41 +151,28 @@ export async function generatePrintableStoryboardTemplate(options: GenerateTempl
       doc.line(cx - 3, cy, cx + 3, cy);
       doc.line(cx, cy - 3, cx, cy + 3);
 
-      // Spodní část: QR kód a řádky pro text
+      // Spodní část: Řádky pro text poznámek (plná šířka bez QR kódu)
       const notesY = frameY + frameH + 3.5;
-      const qrSize = 19;
-      const qrX = x + colWidth - qrSize - 3;
-      const qrY = notesY - 0.5;
+      const notesW = colWidth - 6;
 
-      const scanUrl = getMobileScanUrl(roomId, panel.id);
-      try {
-        const qrDataUrl = await QRCode.toDataURL(scanUrl, {
-          margin: 1,
-          width: 140,
-          errorCorrectionLevel: 'M'
-        });
-        doc.addImage(qrDataUrl, 'PNG', qrX, qrY, qrSize, qrSize);
-      } catch (e) {
-        console.error('Chyba generování QR:', e);
-      }
-
-      // Řádky pro poznámky
-      const notesW = colWidth - qrSize - 10;
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(6.5);
       doc.setTextColor(40, 40, 40);
 
+      // Řádek pro kameru
       doc.text('KAMERA:', x + 3, notesY + 3);
       doc.setDrawColor(210, 210, 210);
       doc.setLineWidth(0.25);
-      doc.line(x + 16, notesY + 3.2, x + 3 + notesW, notesY + 3.2);
+      doc.line(x + 18, notesY + 3.2, x + notesW, notesY + 3.2);
 
+      // Řádky pro děj a akci
       doc.text('DEJ:', x + 3, notesY + 9.5);
-      doc.line(x + 16, notesY + 9.7, x + 3 + notesW, notesY + 9.7);
-      doc.line(x + 3, notesY + 15, x + 3 + notesW, notesY + 15);
+      doc.line(x + 12, notesY + 9.7, x + notesW, notesY + 9.7);
+      doc.line(x + 3, notesY + 15, x + notesW, notesY + 15);
 
+      // Řádek pro zvuk a dialog
       doc.text('ZVUK:', x + 3, notesY + 21);
-      doc.line(x + 14, notesY + 21.2, x + 3 + notesW, notesY + 21.2);
+      doc.line(x + 14, notesY + 21.2, x + notesW, notesY + 21.2);
     }
   }
 
