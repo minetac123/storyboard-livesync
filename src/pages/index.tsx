@@ -13,6 +13,7 @@ import { StoryboardProject, StoryboardPanel } from '../types/storyboard';
 import { INITIAL_PROJECT } from '../utils/sampleData';
 import { sound } from '../utils/sound';
 import { syncService } from '../utils/syncService';
+import { saveProjectToStorage, loadProjectFromStorage } from '../utils/storageService';
 import { Plus, Smartphone, Check } from 'lucide-react';
 
 function generateRandomRoomId() {
@@ -32,6 +33,7 @@ export default function DesktopWorkstation() {
 
   const [connected, setConnected] = useState<boolean>(false);
   const [mobileCount, setMobileCount] = useState<number>(0);
+  const [isSaving, setIsSaving] = useState<boolean>(false);
 
   // Modální stavy
   const [isConnectModalOpen, setIsConnectModalOpen] = useState(false);
@@ -52,33 +54,52 @@ export default function DesktopWorkstation() {
       if (qRoom && typeof qRoom === 'string') {
         finalRoom = qRoom.toUpperCase();
       } else {
-        const savedRoom = localStorage.getItem('sb_room_v3');
+        const savedRoom = typeof window !== 'undefined' ? localStorage.getItem('sb_room_v3') : null;
         finalRoom = savedRoom || generateRandomRoomId();
         router.replace(`/?room=${finalRoom}`, undefined, { shallow: true });
       }
       setRoomId(finalRoom);
-      localStorage.setItem('sb_room_v3', finalRoom);
-
-      const savedProj = localStorage.getItem(`sb_proj_v3_${finalRoom}`);
-      if (savedProj) {
-        try {
-          setProject(JSON.parse(savedProj));
-        } catch (e) {
-          // ignore
-        }
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('sb_room_v3', finalRoom);
       }
+
+      // Načtení projektu z IndexedDB (s neomezenou kapacitou)
+      loadProjectFromStorage(finalRoom).then((saved) => {
+        if (saved) {
+          setProject(saved);
+        }
+      });
     }
   }, [router.isReady, router.query.room]);
 
+  // Automatické ukládání (Autosave) při každé změně textu, záběru či přijetí kresby
   useEffect(() => {
-    if (roomId && project) {
+    if (!roomId || !project) return;
+
+    setIsSaving(true);
+    const timer = setTimeout(async () => {
       try {
-        localStorage.setItem(`sb_proj_v3_${roomId}`, JSON.stringify(project));
+        await saveProjectToStorage(roomId, project);
       } catch (e) {
-        // ignore
+        console.warn('Autosave error:', e);
+      } finally {
+        setIsSaving(false);
       }
-    }
+    }, 400);
+
+    return () => clearTimeout(timer);
   }, [project, roomId]);
+
+  // Okamžité uložení před zavřením okna nebo přepnutím panelu
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      if (roomId && project) {
+        saveProjectToStorage(roomId, project);
+      }
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [roomId, project]);
 
   // Univerzální synchronizace (WebRTC + WebSocket)
   useEffect(() => {
@@ -221,6 +242,7 @@ export default function DesktopWorkstation() {
           onAddPanel={handleAddPanel}
           viewMode={viewMode}
           setViewMode={setViewMode}
+          isSaving={isSaving}
         />
 
         {/* Notifikace o přijetí */}

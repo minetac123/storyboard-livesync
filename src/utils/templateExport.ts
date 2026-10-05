@@ -1,7 +1,6 @@
 import jsPDF from 'jspdf';
 import QRCode from 'qrcode';
 import { StoryboardPanel } from '../types/storyboard';
-
 import { getMobileScanUrl } from './urlHelper';
 
 interface GenerateTemplateOptions {
@@ -31,14 +30,16 @@ export async function generatePrintableStoryboardTemplate(options: GenerateTempl
   const pageWidth = 210;
   const pageHeight = 297;
   const marginX = 12;
-  const marginTop = 20;
+
+  const hasProjectHeader = !!(projectTitle.trim() || director.trim());
+  const marginTop = hasProjectHeader ? 16 : 10;
 
   const totalPanels = panels.length > 0 ? panels.length : 6;
   const totalPages = Math.ceil(totalPanels / panelsPerPage);
 
   const colCount = 2;
   const colWidth = (pageWidth - marginX * 2 - 8) / 2;
-  const panelHeight = 82;
+  const panelHeight = 85;
   const gapX = 8;
   const gapY = 6;
 
@@ -47,32 +48,30 @@ export async function generatePrintableStoryboardTemplate(options: GenerateTempl
       doc.addPage();
     }
 
-    // Horní banner stránky - čistě černobílý
-    doc.setFillColor(0, 0, 0);
-    doc.rect(marginX, 8, pageWidth - marginX * 2, 8, 'F');
+    // Volitelná minimalistická hlavička pouze pokud uživatel zadal název projektu nebo režiséra
+    if (hasProjectHeader) {
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(8.5);
+      doc.setTextColor(0, 0, 0);
+      if (projectTitle.trim()) {
+        doc.text(projectTitle.trim().toUpperCase(), marginX, 10);
+      }
 
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(9.5);
-    doc.setTextColor(255, 255, 255);
-    doc.text('STORYBOARD LIVESYNC - PREDLOHA PRO KRESBU', marginX + 3, 13.5);
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(8);
+      doc.setTextColor(80, 80, 80);
+      if (director.trim()) {
+        doc.text(`REZIE: ${director.trim().toUpperCase()}`, marginX + 70, 10);
+      }
+    }
 
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(8);
-    doc.setTextColor(230, 230, 230);
-    doc.text(`MISTNOST: ${roomId}   |   STRANA ${pageIdx + 1} Z ${totalPages}`, pageWidth - marginX - 55, 13.5);
-
-    // Informace o filmu (pouze pokud jsou vyplněné)
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(8.5);
-    doc.setTextColor(0, 0, 0);
-    const pTitle = projectTitle?.trim() ? `PROJEKT: ${projectTitle.trim().toUpperCase()}` : 'PROJEKT: ____________________';
-    doc.text(pTitle, marginX, 18.5);
-
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(8);
-    doc.setTextColor(60, 60, 60);
-    const pDir = director?.trim() ? `REZIE: ${director.trim().toUpperCase()}` : 'REZIE: ____________________';
-    doc.text(`${pDir}   |   FORMAT 16:9`, marginX + 85, 18.5);
+    // Číslo stránky (pokud je vícestránkový dokument)
+    if (totalPages > 1) {
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(7.5);
+      doc.setTextColor(120, 120, 120);
+      doc.text(`${pageIdx + 1} / ${totalPages}`, pageWidth - marginX - 10, 10);
+    }
 
     // Kreslení jednotlivých políček záběrů
     const startIdx = pageIdx * panelsPerPage;
@@ -84,10 +83,10 @@ export async function generatePrintableStoryboardTemplate(options: GenerateTempl
       const panel = panels[panelIndex] || {
         id: `panel-${panelIndex + 1}`,
         order: panelIndex + 1,
-        scene: `1`,
+        scene: '1',
         shot: `${panelIndex + 1}`,
-        cameraType: 'Celek',
-        cameraMovement: 'Staticka',
+        cameraType: '',
+        cameraMovement: '',
         action: '',
         dialogue: ''
       };
@@ -96,14 +95,14 @@ export async function generatePrintableStoryboardTemplate(options: GenerateTempl
       const row = Math.floor(i / colCount);
 
       const x = marginX + col * (colWidth + gapX);
-      const y = marginTop + 4 + row * (panelHeight + gapY);
+      const y = marginTop + row * (panelHeight + gapY);
 
       // Ohraničení políčka
       doc.setDrawColor(200, 200, 200);
       doc.setLineWidth(0.3);
-      doc.roundedRect(x, y, colWidth, panelHeight, 2, 2, 'S');
+      doc.roundedRect(x, y, colWidth, panelHeight, 1.5, 1.5, 'S');
 
-      // Záhlaví políčka
+      // Záhlaví políčka (číslo záběru a scény)
       doc.setFillColor(245, 245, 245);
       doc.roundedRect(x + 1, y + 1, colWidth - 2, 6, 1, 1, 'F');
       doc.setFont('helvetica', 'bold');
@@ -120,8 +119,8 @@ export async function generatePrintableStoryboardTemplate(options: GenerateTempl
       doc.setFillColor(255, 255, 255);
       doc.rect(frameX, frameY, frameW, frameH, 'F');
 
-      doc.setDrawColor(40, 40, 40);
-      doc.setLineWidth(0.6);
+      doc.setDrawColor(0, 0, 0);
+      doc.setLineWidth(0.5);
       doc.rect(frameX, frameY, frameW, frameH, 'S');
 
       // Rohové optické značky L (pro přesnou detekci fotoaparátem)
@@ -144,23 +143,18 @@ export async function generatePrintableStoryboardTemplate(options: GenerateTempl
 
       // Dolní pravý
       doc.line(frameX + frameW, frameY + frameH, frameX + frameW - markerSize, frameY + frameH);
-      doc.line(frameX + frameW, frameY + frameH, frameX + frameW, frameY + frameH - markerSize);
+      doc.line(frameX + frameW, frameY + frameH, frameX + frameW - markerSize, frameY + frameH);
 
-      // Vodící křížek uprostřed
-      doc.setDrawColor(230, 230, 230);
+      // Jemný vodící křížek uprostřed rámečku
+      doc.setDrawColor(225, 225, 225);
       doc.setLineWidth(0.2);
       const cx = frameX + frameW / 2;
       const cy = frameY + frameH / 2;
       doc.line(cx - 3, cy, cx + 3, cy);
       doc.line(cx, cy - 3, cx, cy + 3);
 
-      doc.setFont('helvetica', 'italic');
-      doc.setFontSize(7);
-      doc.setTextColor(210, 215, 220);
-      doc.text('PLOCHA PRO KRESBU (16:9)', cx - 18, cy + 8);
-
-      // Spodní část: QR kód a řádky
-      const notesY = frameY + frameH + 3;
+      // Spodní část: QR kód a řádky pro text
+      const notesY = frameY + frameH + 3.5;
       const qrSize = 19;
       const qrX = x + colWidth - qrSize - 3;
       const qrY = notesY - 0.5;
@@ -173,43 +167,30 @@ export async function generatePrintableStoryboardTemplate(options: GenerateTempl
           errorCorrectionLevel: 'M'
         });
         doc.addImage(qrDataUrl, 'PNG', qrX, qrY, qrSize, qrSize);
-
-        doc.setFont('helvetica', 'bold');
-        doc.setFontSize(5);
-        doc.setTextColor(30, 41, 59);
-        doc.text('SKENOVAT MOBIL', qrX + 1, qrY + qrSize + 2.5);
       } catch (e) {
         console.error('Chyba generování QR:', e);
       }
 
+      // Řádky pro poznámky
       const notesW = colWidth - qrSize - 10;
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(6.5);
-      doc.setTextColor(80, 90, 105);
+      doc.setTextColor(40, 40, 40);
 
       doc.text('KAMERA:', x + 3, notesY + 3);
-      doc.setDrawColor(220, 225, 235);
+      doc.setDrawColor(210, 210, 210);
       doc.setLineWidth(0.25);
       doc.line(x + 16, notesY + 3.2, x + 3 + notesW, notesY + 3.2);
 
-      doc.text('DEJ:', x + 3, notesY + 9);
-      doc.line(x + 16, notesY + 9.2, x + 3 + notesW, notesY + 9.2);
-      doc.line(x + 3, notesY + 14.5, x + 3 + notesW, notesY + 14.5);
+      doc.text('DEJ:', x + 3, notesY + 9.5);
+      doc.line(x + 16, notesY + 9.7, x + 3 + notesW, notesY + 9.7);
+      doc.line(x + 3, notesY + 15, x + 3 + notesW, notesY + 15);
 
-      doc.text('ZVUK:', x + 3, notesY + 20);
-      doc.line(x + 14, notesY + 20.2, x + 3 + notesW, notesY + 20.2);
+      doc.text('ZVUK:', x + 3, notesY + 21);
+      doc.line(x + 14, notesY + 21.2, x + 3 + notesW, notesY + 21.2);
     }
-
-    // Patička stránky
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(6.5);
-    doc.setTextColor(130, 140, 155);
-    doc.text(
-      'Navod: 1. Nakreslete skicu do 16:9 ramecku  *  2. Namirte fotoaparat mobilu na QR kod  *  3. Automaticky orez a okamzity prenos do PC.',
-      marginX,
-      pageHeight - 5
-    );
   }
 
-  doc.save(`${projectTitle.replace(/[^a-zA-Z0-9]/g, '_')}_Sablona_A4_${roomId}.pdf`);
+  const safeFilename = projectTitle.trim() ? projectTitle.trim().replace(/[^a-zA-Z0-9]/g, '_') : 'Storyboard';
+  doc.save(`${safeFilename}_Sablona_A4_${roomId}.pdf`);
 }

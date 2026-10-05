@@ -27,6 +27,7 @@ interface HeaderProps {
   onAddPanel: () => void;
   viewMode: 'grid' | 'list' | 'presentation';
   setViewMode: (mode: 'grid' | 'list' | 'presentation') => void;
+  isSaving?: boolean;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -41,7 +42,8 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenSimulatorModal,
   onAddPanel,
   viewMode,
-  setViewMode
+  setViewMode,
+  isSaving = false
 }) => {
   const [copied, setCopied] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
@@ -111,6 +113,21 @@ export const Header: React.FC<HeaderProps> = ({
             {mobileCount > 0 && (
               <span className="text-[11px] text-zinc-300 ml-1">📱 {mobileCount}</span>
             )}
+          </div>
+
+          {/* Indikátor automatického ukládání */}
+          <div
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-zinc-950 border border-zinc-850 text-[11px] font-mono text-zinc-400"
+            title="Veškeré změny a kresby se automaticky ukládají"
+          >
+            <span
+              className={`w-1.5 h-1.5 rounded-full ${
+                isSaving ? 'bg-zinc-400 animate-pulse' : 'bg-white'
+              }`}
+            />
+            <span className="text-zinc-300">
+              {isSaving ? 'Ukládám...' : 'Autosave'}
+            </span>
           </div>
         </div>
 
